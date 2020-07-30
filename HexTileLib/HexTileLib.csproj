@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <LangVersion>8</LangVersion>
+        <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Title>HexTileLib</Title>
+        <Authors>bartimaeusnek</Authors>
+        <Description>A simple library that contains some classes which help with creating HexTile Games. This is a KISS approach, since many libs out there seemed bloated to me. </Description>
+        <Copyright>2020 bartimaeusnek</Copyright>
+        <PackageProjectUrl>https://github.com/bartimaeusnek/HexTileLib</PackageProjectUrl>
+        <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/bartimaeusnek/HexTileLib</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>hex, grid, hexgrid, Hexagonal Grids,lgplv3</PackageTags>
+    </PropertyGroup>
+
+</Project>
