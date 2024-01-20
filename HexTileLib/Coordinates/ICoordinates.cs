@@ -1,8 +1,9 @@
-﻿namespace HexTileLib.Coordinates
+﻿namespace HexTileLib.Coordinates;
+
+using System;
+
+public interface ICoordinates<out T> where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
 {
-    public interface ICoordinates
-    {
-        public int q { get; }
-        public int s { get; }
-    }
+    public T Q { get; }
+    public T R { get; }
 }

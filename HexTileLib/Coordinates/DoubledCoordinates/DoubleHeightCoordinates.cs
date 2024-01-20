@@ -1,13 +1,13 @@
-﻿namespace HexTileLib.Coordinates;
+﻿namespace HexTileLib.Coordinates.DoubledCoordinates;
 
 using System;
 using System.Runtime.CompilerServices;
-using DoubledCoordinates;
 using Silk.NET.Maths;
 
-public readonly struct AxialCoordinates<T>(T q, T r) : IEquatable<AxialCoordinates<T>>, ICoordinates<T>
-    where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+public readonly struct DoubleHeightCoordinates<T> : ICoordinates<T> where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
 {
+    public T Row => R;
+    public T Col => Q;
     public T Q
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -15,6 +15,10 @@ public readonly struct AxialCoordinates<T>(T q, T r) : IEquatable<AxialCoordinat
         {
             return Coords.X;
         }
+    }
+    public override string ToString()
+    {
+        return Coords.ToString();
     }
 
     public T R
@@ -38,34 +42,35 @@ public readonly struct AxialCoordinates<T>(T q, T r) : IEquatable<AxialCoordinat
     public Vector2D<T> Coords
     {
         get;
-    } = new Vector2D<T>(q, r);
-
-    public static explicit operator Vector2D<T>(AxialCoordinates<T> left)
+    }
+    
+    public DoubleHeightCoordinates(T row, T col)
+    {
+        Coords = new Vector2D<T>(col, row);
+    }
+    public static explicit operator Vector2D<T>(DoubleHeightCoordinates<T> left)
     {
         return left.Coords;
     }
-    public override string ToString()
-    {
-        return Coords.ToString();
-    }
-    public bool Equals(AxialCoordinates<T> other)
+
+    public bool Equals(DoubleHeightCoordinates<T> other)
     {
         return Coords == other.Coords;
     }
 
     public AxialCoordinates<T> ToAxialCoordinates()
     {
-        return this;
+        var q = Col;
+        var r = Scalar.Divide(Scalar.Subtract(Row, Col), Scalar<T>.Two);
+        return new AxialCoordinates<T>(q, r);
     }
     public DoubleHeightCoordinates<T> ToDoubleCoordinates()
     {
-        var col = Q;
-        var row = Scalar.Add(Scalar.Multiply(Scalar<T>.Two, R), Q);
-        return new DoubleHeightCoordinates<T>(row, col);
+        return this;
     }
     public override bool Equals(object obj)
     {
-        return obj is AxialCoordinates<T> other && Equals(other);
+        return obj is DoubleHeightCoordinates<T> other && Equals(other);
     }
 #if NETCOREAPP || NETSTANDARD2_1
     public override int GetHashCode()
@@ -78,12 +83,12 @@ public readonly struct AxialCoordinates<T>(T q, T r) : IEquatable<AxialCoordinat
         return 17 + Q.GetHashCode() * 23 + R.GetHashCode() * 31;
     }
 #endif
-    public static bool operator ==(AxialCoordinates<T> left, AxialCoordinates<T> right)
+    public static bool operator ==(DoubleHeightCoordinates<T> left, DoubleHeightCoordinates<T> right)
     {
         return left.Equals(right);
     }
 
-    public static bool operator !=(AxialCoordinates<T> left, AxialCoordinates<T> right)
+    public static bool operator !=(DoubleHeightCoordinates<T> left, DoubleHeightCoordinates<T> right)
     {
         return !left.Equals(right);
     }

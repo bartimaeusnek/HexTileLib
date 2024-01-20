@@ -1,230 +1,312 @@
-﻿using System;
+﻿namespace HexTileLib.Coordinates;
+
+using System;
 using System.Collections.Generic;
-using System.Numerics;
 using System.Runtime.CompilerServices;
-#if NETCOREAPP
-using System.Text.Json.Serialization;
-#endif
-namespace HexTileLib.Coordinates
+using Silk.NET.Maths;
+
+public readonly struct CubeCoordinates<T> : IEquatable<AxialCoordinates<T>>, ICoordinates<T>, IEquatable<CubeCoordinates<T>> where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
 {
-    public readonly struct CubeCoordinates : IEquatable<CubeCoordinates> , ICoordinates
+    public T Q
     {
-        public int q
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (int) this.Coords.X;
+            return Coords.X;
         }
-
-        public int r
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (int) this.Coords.Y;
-        }
-
-        public int s
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (int) this.Coords.Z;
-        }
-
-#if NETCOREAPP
-        [JsonIgnore]
-        public Vector3 Coords
-#elif NETSTANDARD2_0
-        public (int X, int Y, int Z) Coords
-#endif
-        {
-            get;
-        }
-        
-        public CubeCoordinates(int q_, int r_, int s_)
-        {
-            if (q_ + r_ + s_ != 0)
-            {
-                throw new ArgumentException($"{nameof(CubeCoordinates)}: {nameof(q_)} + {nameof(r_)} + {nameof(s_)} != 0" );
-            }
-#if NETCOREAPP
-            this.Coords = new Vector3(q_, r_, s_);
-#elif NETSTANDARD2_0
-            this.Coords = (q_, r_, s_);
-#endif
-        }
-
-#if NETCOREAPP
-        [JsonIgnore]
-#endif
-        public int Length
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => LengthCalculation(this);
-        }
-
-#if NETCOREAPP
-        [JsonIgnore]
-#endif
-        public CubeCoordinates RotateLeft
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => RotateLeftCalculation(this);
-        }
-        
-#if NETCOREAPP
-        [JsonIgnore]
-#endif
-        public CubeCoordinates RotateRight
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => RotateRightCalculation(this);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Distance(CubeCoordinates coordinates)
-            => DistanceCalculation(this,coordinates);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CubeCoordinates Neighbor(CoordinateDirectionFlat direction)
-            => NeighborCalculation(this,(int) direction);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CubeCoordinates Neighbor(CoordinateDirectionPointy direction)
-            => NeighborCalculation(this, (int) direction);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CubeCoordinates DiagonalNeighbor(CoordinateDirectionFlatDiagonal direction)
-            => DiagonalNeighborCalculation(this, (int) direction);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CubeCoordinates DiagonalNeighbor(CoordinateDirectionPointyDiagonal direction)
-            => DiagonalNeighborCalculation(this, (int) direction);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int LengthCalculation(CubeCoordinates hex) => (Math.Abs(hex.q) + Math.Abs(hex.r) + Math.Abs(hex.s)) / 2;
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int DistanceCalculation(CubeCoordinates a, CubeCoordinates b) => LengthCalculation(a - b);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CubeCoordinates RotateLeftCalculation(CubeCoordinates coordinates) => new CubeCoordinates(-coordinates.s, -coordinates.q, -coordinates.r);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CubeCoordinates RotateRightCalculation(CubeCoordinates coordinates) => new CubeCoordinates(-coordinates.r, -coordinates.s, -coordinates.q);
-
-        public static List<CubeCoordinates> directions = new List<CubeCoordinates>{new CubeCoordinates(1, -1, 0), new CubeCoordinates(0, -1, 1), new CubeCoordinates(-1, 0, 1), new CubeCoordinates(-1, 1, 0), new CubeCoordinates(0, 1, -1),new CubeCoordinates(1, 0, -1)};
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CubeCoordinates Direction(int direction) => directions[direction];
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CubeCoordinates NeighborCalculation(CubeCoordinates coordinates, int direction) => coordinates + Direction(direction);
-
-        public static List<CubeCoordinates> diagonals = new List<CubeCoordinates>{new CubeCoordinates(2, -1, -1), new CubeCoordinates(1, -2, 1), new CubeCoordinates(-1, -1, 2), new CubeCoordinates(-2, 1, 1), new CubeCoordinates(-1, 2, -1), new CubeCoordinates(1, 1, -2)};
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CubeCoordinates Diagonals(int direction) => diagonals[direction];
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CubeCoordinates DiagonalNeighborCalculation(CubeCoordinates coordinates, int direction) => coordinates + Diagonals(direction);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining 
-#if NETCOREAPP
-        | MethodImplOptions.AggressiveOptimization
-#endif
-                   )]
-        public static List<CubeCoordinates> CubicDistanceCalculation(int range, CubeCoordinates center)
-        {
-            var results = new List<CubeCoordinates>();
-            var (x1, y1, z1) = center;
-            for (var x = -range + x1; x <= range + x1; x++)
-            {
-                for (var y = -range + y1; y <= range + y1; y++)
-                {
-                    for (var z = -range + z1; z <= range + z1; z++)
-                    {
-                        if (x + y + z != 0)
-                            continue;
-                        results.Add(new CubeCoordinates(x,y,z));
-                    }
-                }
-            }
-
-            return results;
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public List<CubeCoordinates> Rings(int range) => RingsCalculation(range, this);
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public List<CubeCoordinates> CubicDistance(int range) => CubicDistanceCalculation(range, this);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining 
-#if NETCOREAPP
-        | MethodImplOptions.AggressiveOptimization
-#endif
-                   )]
-        public static List<CubeCoordinates> RingsCalculation(int range, CubeCoordinates center)
-        {
-            var results = new List<CubeCoordinates>();
-            var point = center.Neighbor((CoordinateDirectionFlat) 4);
-            for (var i = 1; i < range; i++)
-            {
-                point = point.Neighbor((CoordinateDirectionFlat) 4);
-            }
-
-            for (var i = 0; i < 6; i++)
-            {
-                for (var j = 0; j < range; j++)
-                {
-                    results.Add(point);
-                    point = point.Neighbor((CoordinateDirectionFlat) i);
-                }
-            }
-
-            return results;
-        }
-        
-#region C#Specific
-        public void Deconstruct(out int q, out int r, out int s)
-        {
-            q = this.q;
-            r = this.r;
-            s = this.s;
-        }
-        
-#if NETCOREAPP
-        private CubeCoordinates(Vector3 left) => this.Coords = left;
-
-        public static implicit operator Vector3(CubeCoordinates left) => left.Coords;
-        public static implicit operator CubeCoordinates(Vector3 left) => new CubeCoordinates(left);
-        public static implicit operator Vector2(CubeCoordinates left) => (AxialCoordinates) left;
-        public static implicit operator CubeCoordinates(Vector2 left) => (AxialCoordinates) left;
-#endif
-        
-        public static implicit operator AxialCoordinates(CubeCoordinates left) => new AxialCoordinates(left.q, left.s);
-
-        public static implicit operator CubeCoordinates(AxialCoordinates left) => new CubeCoordinates(left.q, left.s,left.r);
-        
-        public bool Equals(CubeCoordinates other) => this.Coords.Equals(other.Coords);
-
-        public override bool Equals(object obj) => obj is CubeCoordinates other && this.Equals(other);
-
-        public override int GetHashCode() => this.Coords.GetHashCode();
-
-        public static bool operator ==(CubeCoordinates left, CubeCoordinates right) => left.Equals(right);
-        public static bool operator !=(CubeCoordinates left, CubeCoordinates right) => !left.Equals(right);
-        
-#if NETCOREAPP
-        public static CubeCoordinates operator +(CubeCoordinates left, CubeCoordinates right) => left.Coords + right.Coords;
-        public static CubeCoordinates operator -(CubeCoordinates left, CubeCoordinates right) => left.Coords - right.Coords;
-        public static CubeCoordinates operator *(CubeCoordinates left, int right) => left.Coords * right;
-        public static CubeCoordinates operator /(CubeCoordinates left, int right) => left.Coords / right;
-#elif NETSTANDARD2_0
-        public static CubeCoordinates operator +(CubeCoordinates left, CubeCoordinates right) => new CubeCoordinates(left.Coords.X + right.Coords.X, left.Coords.Y + right.Coords.Y,left.Coords.Z + right.Coords.Z);
-        public static CubeCoordinates operator -(CubeCoordinates left, CubeCoordinates right) => new CubeCoordinates(left.Coords.X - right.Coords.X, left.Coords.Y - right.Coords.Y,left.Coords.Z - right.Coords.Z);
-        public static CubeCoordinates operator *(CubeCoordinates left, int right) => new CubeCoordinates(left.Coords.X * right, left.Coords.Y * right,left.Coords.Z * right);
-        public static CubeCoordinates operator /(CubeCoordinates left, int right) => new CubeCoordinates(left.Coords.X / right, left.Coords.Y / right,left.Coords.Z / right);
-#endif
-        public override string ToString() => this.Coords.ToString();
-
-#endregion
     }
+
+    public T R
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            return Coords.Y;
+        }
+    }
+
+    public T S
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            return Coords.Z;
+        }
+    }
+
+    public Vector3D<T> Coords
+    {
+        get;
+    }
+
+    public CubeCoordinates(T q, T r, T s)
+    {
+        if (Scalar.NotEqual(Scalar.Add(Scalar.Add(q, r), s), Scalar<T>.Zero))
+        {
+            throw new ArgumentException($"{nameof(CubeCoordinates<T>)}: {nameof(q)} + {nameof(r)} + {nameof(s)} != 0");
+        }
+        Coords = new Vector3D<T>(q, r, s);
+    }
+
+
+    public T Length
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            return LengthCalculation(this);
+        }
+    }
+
+
+    public CubeCoordinates<T> RotateLeft
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            return RotateLeftCalculation(this);
+        }
+    }
+
+
+    public CubeCoordinates<T> RotateRight
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            return RotateRightCalculation(this);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T Distance(CubeCoordinates<T> coordinates)
+    {
+        return DistanceCalculation(this, coordinates);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public CubeCoordinates<T> Neighbor(CoordinateDirectionFlat direction)
+    {
+        return NeighborCalculation(this, (int)direction);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public CubeCoordinates<T> Neighbor(CoordinateDirectionPointy direction)
+    {
+        return NeighborCalculation(this, (int)direction);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public CubeCoordinates<T> DiagonalNeighbor(CoordinateDirectionFlatDiagonal direction)
+    {
+        return DiagonalNeighborCalculation(this, (int)direction);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public CubeCoordinates<T> DiagonalNeighbor(CoordinateDirectionPointyDiagonal direction)
+    {
+        return DiagonalNeighborCalculation(this, (int)direction);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T LengthCalculation(CubeCoordinates<T> hex)
+    {
+        return hex.Coords.Length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T DistanceCalculation(CubeCoordinates<T> a, CubeCoordinates<T> b)
+    {
+        return Vector3D.Distance(a.Coords, b.Coords);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static CubeCoordinates<T> RotateLeftCalculation(CubeCoordinates<T> coordinates)
+    {
+        return new CubeCoordinates<T>(Scalar.Negate(coordinates.S), Scalar.Negate(coordinates.Q), Scalar.Negate(coordinates.R));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static CubeCoordinates<T> RotateRightCalculation(CubeCoordinates<T> coordinates)
+    {
+        return new CubeCoordinates<T>(Scalar.Negate(coordinates.R), Scalar.Negate(coordinates.S), Scalar.Negate(coordinates.Q));
+    }
+
+    public static List<CubeCoordinates<T>> directions = new List<CubeCoordinates<T>>
+    {
+        new CubeCoordinates<T>(Scalar<T>.One, Scalar<T>.MinusOne, Scalar<T>.Zero),
+        new CubeCoordinates<T>(Scalar<T>.Zero, Scalar<T>.MinusOne, Scalar<T>.One),
+        new CubeCoordinates<T>(Scalar<T>.MinusOne, Scalar<T>.Zero, Scalar<T>.One),
+        new CubeCoordinates<T>(Scalar<T>.MinusOne, Scalar<T>.One, Scalar<T>.Zero),
+        new CubeCoordinates<T>(Scalar<T>.Zero, Scalar<T>.One, Scalar<T>.MinusOne),
+        new CubeCoordinates<T>(Scalar<T>.One, Scalar<T>.Zero, Scalar<T>.MinusOne)
+    };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static CubeCoordinates<T> Direction(int direction)
+    {
+        return directions[direction];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static CubeCoordinates<T> NeighborCalculation(CubeCoordinates<T> coordinates, int direction)
+    {
+        return coordinates + Direction(direction);
+    }
+
+    public static readonly List<CubeCoordinates<T>> diagonals = new List<CubeCoordinates<T>>
+    {
+        new CubeCoordinates<T>(Scalar<T>.Two, Scalar<T>.MinusOne, Scalar<T>.MinusOne),
+        new CubeCoordinates<T>(Scalar<T>.One, Scalar<T>.MinusTwo, Scalar<T>.One),
+        new CubeCoordinates<T>(Scalar<T>.MinusOne, Scalar<T>.MinusOne, Scalar<T>.Two),
+        new CubeCoordinates<T>(Scalar<T>.MinusTwo, Scalar<T>.One, Scalar<T>.One),
+        new CubeCoordinates<T>(Scalar<T>.MinusOne, Scalar<T>.Two, Scalar<T>.MinusOne),
+        new CubeCoordinates<T>(Scalar<T>.One, Scalar<T>.One, Scalar<T>.MinusTwo)
+    };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static CubeCoordinates<T> Diagonals(int direction)
+    {
+        return diagonals[direction];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static CubeCoordinates<T> DiagonalNeighborCalculation(CubeCoordinates<T> coordinates, int direction)
+    {
+        return coordinates + Diagonals(direction);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static List<CubeCoordinates<T>> CubicDistanceCalculation(T range, CubeCoordinates<T> center)
+    {
+        var results = new List<CubeCoordinates<T>>();
+        var (x1, y1, z1) = center;
+
+        for (var x = Scalar.Add(Scalar.Negate(range), x1);
+             Scalar.LessThanOrEqual(x, Scalar.Add(range, x1));
+             x = Scalar.Add(x, Scalar<T>.One))
+        {
+            for (var y = Scalar.Add(Scalar.Negate(range), y1);
+                 Scalar.LessThanOrEqual(y, Scalar.Add(range, y1));
+                 y = Scalar.Add(y, Scalar<T>.One))
+            {
+                for (var z = Scalar.Add(Scalar.Negate(range), z1);
+                     Scalar.LessThanOrEqual(z, Scalar.Add(range, z1));
+                     z = Scalar.Add(z, Scalar<T>.One))
+                {
+                    if (Scalar.NotEqual(Scalar.Add(Scalar.Add(x, y), z), Scalar<T>.Zero))
+                        continue;
+                    results.Add(new CubeCoordinates<T>(x, y, z));
+                }
+            }
+        }
+
+        return results;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<CubeCoordinates<T>> Rings(T range)
+    {
+        return RingsCalculation(range, this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<CubeCoordinates<T>> CubicDistance(T range)
+    {
+        return CubicDistanceCalculation(range, this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static List<CubeCoordinates<T>> RingsCalculation(T range, CubeCoordinates<T> center)
+    {
+        var results = new List<CubeCoordinates<T>>();
+        var point = center.Neighbor((CoordinateDirectionFlat)4);
+
+        for (var i = Scalar<T>.One; Scalar.LessThan(i, range); i = Scalar.Add(i, Scalar<T>.One))
+        {
+            point = point.Neighbor((CoordinateDirectionFlat)4);
+        }
+        for (int i = 0; i < 6; i++)
+        {
+            for (var j = Scalar<T>.Zero; Scalar.LessThan(j, range); j = Scalar.Add(j, Scalar<T>.One))
+            {
+                results.Add(point);
+                point = point.Neighbor((CoordinateDirectionFlat)i);
+            }
+        }
+        return results;
+    }
+
+#region C#Specific
+    public void Deconstruct(out T q, out T r, out T s)
+    {
+        q = this.Q;
+        r = this.R;
+        s = this.S;
+    }
+    private CubeCoordinates(Vector3D<T> left)
+    {
+        Coords = left;
+    }
+    public static explicit operator CubeCoordinates<T>(Vector3D<T> left)
+    {
+        return new CubeCoordinates<T>(left);
+    }
+    public static explicit operator Vector3D<T>(CubeCoordinates<T> left)
+    {
+        return left.Coords;
+    }
+    public static explicit operator AxialCoordinates<T>(CubeCoordinates<T> left)
+    {
+        return new AxialCoordinates<T>(left.Q, left.S);
+    }
+    public static explicit operator CubeCoordinates<T>(AxialCoordinates<T> left)
+    {
+        return new CubeCoordinates<T>(left.Q, left.S, left.R);
+    }
+    public bool Equals(CubeCoordinates<T> other)
+    {
+        return Coords.Equals(other.Coords);
+    }
+    public bool Equals(AxialCoordinates<T> other)
+    {
+        return Equals((CubeCoordinates<T>)other);
+    }
+    public override bool Equals(object obj)
+    {
+        return obj is CubeCoordinates<T> other && Equals(other);
+    }
+    public override int GetHashCode()
+    {
+        return Coords.GetHashCode();
+    }
+    public static bool operator ==(CubeCoordinates<T> left, CubeCoordinates<T> right)
+    {
+        return left.Equals(right);
+    }
+    public static bool operator !=(CubeCoordinates<T> left, CubeCoordinates<T> right)
+    {
+        return !left.Equals(right);
+    }
+    public static CubeCoordinates<T> operator +(CubeCoordinates<T> left, CubeCoordinates<T> right)
+    {
+        return (CubeCoordinates<T>)(left.Coords + right.Coords);
+    }
+    public static CubeCoordinates<T> operator -(CubeCoordinates<T> left, CubeCoordinates<T> right)
+    {
+        return (CubeCoordinates<T>)(left.Coords - right.Coords);
+    }
+    public static CubeCoordinates<T> operator *(CubeCoordinates<T> left, T right)
+    {
+        return (CubeCoordinates<T>)(left.Coords * right);
+    }
+    public static CubeCoordinates<T> operator /(CubeCoordinates<T> left, T right)
+    {
+        return (CubeCoordinates<T>)(left.Coords / right);
+    }
+    public override string ToString()
+    {
+        return Coords.ToString();
+    }
+#endregion
 }

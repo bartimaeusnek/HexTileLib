@@ -1,18 +1,46 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <LangVersion>8</LangVersion>
-        <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
+        <LangVersion>latestmajor</LangVersion>
+        <TargetFrameworks>net5.0;net6.0;net7.0;net8.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>HexTileLib</Title>
         <Authors>bartimaeusnek</Authors>
-        <Description>A simple library that contains some classes which help with creating HexTile Games. This is a KISS approach, since many libs out there seemed bloated to me. </Description>
+        <Description>A simple library that contains some classes which help with creating HexTile Games. This is a KISS approach, since many libs out there seemed bloated to me.</Description>
         <Copyright>2020 bartimaeusnek</Copyright>
         <PackageProjectUrl>https://github.com/bartimaeusnek/HexTileLib</PackageProjectUrl>
         <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/bartimaeusnek/HexTileLib</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>hex, grid, hexgrid, Hexagonal Grids,lgplv3</PackageTags>
+        <Version>2.0.0</Version>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Silk.NET.Maths" Version="2.20.0"/>
+    </ItemGroup>
+
+    <PropertyGroup Label="Package-SourceLink">
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Package-ReproducibleBuild">
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+
+    <ItemGroup Label="ItemGroup-SourceLink">
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 
 </Project>
