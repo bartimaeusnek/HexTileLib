@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Coordinates;
 using Coordinates.DoubledCoordinates;
 using Silk.NET.Maths;
@@ -18,18 +19,78 @@ public enum FixedSizedStorageShape
     Ignore
 }
 
+public delegate Span<TValue> StorageAccess<TValue>();
+
+public readonly struct RhombusColumnMajorAccessStorage<TVectorKeyType, TValue>(StorageAccess<TValue> storageAccess, int width)
+    where TVectorKeyType : unmanaged, IFormattable, IEquatable<TVectorKeyType>, IComparable<TVectorKeyType>
+{
+    internal readonly StorageAccess<TValue> _storageAccess = storageAccess;
+    internal readonly int _width = width;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Add(AxialCoordinates<TVectorKeyType> coordinates, TValue obj)
+    {
+        ArrayUtil<TValue>.Set2DCoordTo1DArrayColumnMajor(
+            _storageAccess(), 
+            Scalar.As<TVectorKeyType, int>(coordinates.R),
+            Scalar.As<TVectorKeyType, int>(coordinates.Q),
+            _width,
+            obj
+        );
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref TValue Get(AxialCoordinates<TVectorKeyType> coordinates)
+    {
+        return ref ArrayUtil<TValue>.Get2DCoordFrom1DArrayColumnMajor(
+            _storageAccess(),
+            Scalar.As<TVectorKeyType, int>(coordinates.R),
+            Scalar.As<TVectorKeyType, int>(coordinates.Q),
+            _width
+        );
+    }
+}
+
+public readonly struct RhombusRowMajorAccessStorage<TVectorKeyType, TValue>(StorageAccess<TValue> storageAccess, int height)
+    where TVectorKeyType : unmanaged, IFormattable, IEquatable<TVectorKeyType>, IComparable<TVectorKeyType>
+{
+    internal readonly StorageAccess<TValue> _storageAccess = storageAccess;
+    internal readonly int _height = height;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Add(AxialCoordinates<TVectorKeyType> coordinates, TValue obj)
+    {
+        ArrayUtil<TValue>.Set2DCoordTo1DArrayRowMajor(
+            _storageAccess(), 
+            Scalar.As<TVectorKeyType, int>(coordinates.R),
+            Scalar.As<TVectorKeyType, int>(coordinates.Q),
+            _height,
+            obj
+        );
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref TValue Get(AxialCoordinates<TVectorKeyType> coordinates)
+    {
+        return ref ArrayUtil<TValue>.Get2DCoordFrom1DArrayRowMajor(
+            _storageAccess(),
+            Scalar.As<TVectorKeyType, int>(coordinates.R),
+            Scalar.As<TVectorKeyType, int>(coordinates.Q),
+            _height
+            );
+    }
+}
+
 /**
  * If FixedSizedStorageShape is set to ignore, you will end up with unused space!
  */
 [DebuggerTypeProxy(typeof(CustomAccessStorageDebugView<,>), Target = typeof(CustomAccessStorage<,>))]
-public readonly struct CustomAccessStorage<TVectorKeyType, TValue>(CustomAccessStorage<TVectorKeyType, TValue>.StorageAccess storageAccess, int height, FixedSizedStorageShape shape)
+public readonly struct CustomAccessStorage<TVectorKeyType, TValue>(StorageAccess<TValue> storageAccess, int height, FixedSizedStorageShape shape)
     where TVectorKeyType : unmanaged, IFormattable, IEquatable<TVectorKeyType>, IComparable<TVectorKeyType>
 {
-    internal readonly StorageAccess _storageAccess = storageAccess;
+    internal readonly StorageAccess<TValue> _storageAccess = storageAccess;
     internal readonly int _height = height;
     internal readonly FixedSizedStorageShape _shape = shape;
-
-    public delegate Span<TValue> StorageAccess();
     
     public static CustomAccessStorage<TVectorKeyType, TValue> CreateArrayStorage(int width, int height, FixedSizedStorageShape shape)
     {
@@ -45,13 +106,13 @@ public readonly struct CustomAccessStorage<TVectorKeyType, TValue>(CustomAccessS
             {
                 var doubleCoordinates = coordinates.ToDoubleCoordinates();
                 var q = CalculateRectangleQ(doubleCoordinates.Q, doubleCoordinates.R);
-                ArrayUtil<TValue>.Set2DCoordTo1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(doubleCoordinates.R), Scalar.As<TVectorKeyType, int>(q), _height, obj);
+                ArrayUtil<TValue>.Set2DCoordTo1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(doubleCoordinates.R), Scalar.As<TVectorKeyType, int>(q), _height, obj);
                 return;
             }
             case FixedSizedStorageShape.Rhombus:
             case FixedSizedStorageShape.Ignore:
             {
-                ArrayUtil<TValue>.Set2DCoordTo1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(coordinates.Q), _height, obj);
+                ArrayUtil<TValue>.Set2DCoordTo1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(coordinates.Q), _height, obj);
                 return;
             }
             default:
@@ -66,14 +127,14 @@ public readonly struct CustomAccessStorage<TVectorKeyType, TValue>(CustomAccessS
             case FixedSizedStorageShape.Rhombus:
             {
                 var doubleCoordinates = coordinates.ToAxialCoordinates();
-                ArrayUtil<TValue>.Set2DCoordTo1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(doubleCoordinates.R), Scalar.As<TVectorKeyType, int>(doubleCoordinates.Q), _height, obj);
+                ArrayUtil<TValue>.Set2DCoordTo1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(doubleCoordinates.R), Scalar.As<TVectorKeyType, int>(doubleCoordinates.Q), _height, obj);
                 return;
             }
             case FixedSizedStorageShape.Rectangle:
             case FixedSizedStorageShape.Ignore:
             {
                 var q = CalculateRectangleQ(coordinates.Q, coordinates.R);
-                ArrayUtil<TValue>.Set2DCoordTo1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(q), _height, obj);
+                ArrayUtil<TValue>.Set2DCoordTo1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(q), _height, obj);
                 return;
             }
             default:
@@ -88,14 +149,14 @@ public readonly struct CustomAccessStorage<TVectorKeyType, TValue>(CustomAccessS
             case FixedSizedStorageShape.Rhombus:
             {
                 var doubleCoordinates = coordinates.ToAxialCoordinates();
-                ArrayUtil<TValue>.Set2DCoordTo1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(doubleCoordinates.R), Scalar.As<TVectorKeyType, int>(doubleCoordinates.Q), _height, obj);
+                ArrayUtil<TValue>.Set2DCoordTo1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(doubleCoordinates.R), Scalar.As<TVectorKeyType, int>(doubleCoordinates.Q), _height, obj);
                 return;
             }
             case FixedSizedStorageShape.Rectangle:
             case FixedSizedStorageShape.Ignore:
             {
                 var q = CalculateRectangleQ(coordinates.Q, coordinates.R);
-                ArrayUtil<TValue>.Set2DCoordTo1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(q), _height, obj);
+                ArrayUtil<TValue>.Set2DCoordTo1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(q), _height, obj);
                 return;
             }
             default:
@@ -115,13 +176,13 @@ public readonly struct CustomAccessStorage<TVectorKeyType, TValue>(CustomAccessS
             case FixedSizedStorageShape.Rhombus:
             {
                 var axialCoordinates = coordinates.ToAxialCoordinates();
-                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(axialCoordinates.R), Scalar.As<TVectorKeyType, int>(axialCoordinates.Q), _height);
+                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(axialCoordinates.R), Scalar.As<TVectorKeyType, int>(axialCoordinates.Q), _height);
             }
             case FixedSizedStorageShape.Rectangle:
             case FixedSizedStorageShape.Ignore:
             {
                 var q = CalculateRectangleQ(coordinates.Q, coordinates.R);
-                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(q), _height);
+                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(q), _height);
             }
             default:
                 throw new InvalidConstraintException("FixedSizedStorage can only store Rectangle or Rhombus maps!");
@@ -134,13 +195,13 @@ public readonly struct CustomAccessStorage<TVectorKeyType, TValue>(CustomAccessS
             case FixedSizedStorageShape.Rhombus:
             {
                 var axialCoordinates = coordinates.ToAxialCoordinates();
-                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(axialCoordinates.R), Scalar.As<TVectorKeyType, int>(axialCoordinates.Q), _height);
+                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(axialCoordinates.R), Scalar.As<TVectorKeyType, int>(axialCoordinates.Q), _height);
             }
             case FixedSizedStorageShape.Rectangle:
             case FixedSizedStorageShape.Ignore:
             {
                 var q = CalculateRectangleQ(coordinates.Q, coordinates.R);
-                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(q), _height);
+                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(q), _height);
             }
             default:
                 throw new InvalidConstraintException("FixedSizedStorage can only store Rectangle or Rhombus maps!");
@@ -154,12 +215,12 @@ public readonly struct CustomAccessStorage<TVectorKeyType, TValue>(CustomAccessS
             {
                 var doubleCoordinates = coordinates.ToDoubleCoordinates();
                 var q = CalculateRectangleQ(doubleCoordinates.Q, doubleCoordinates.R);
-                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(doubleCoordinates.R), Scalar.As<TVectorKeyType, int>(q), _height);
+                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(doubleCoordinates.R), Scalar.As<TVectorKeyType, int>(q), _height);
             }
             case FixedSizedStorageShape.Rhombus:
             case FixedSizedStorageShape.Ignore:
             {
-                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArray(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(coordinates.Q), _height);
+                return ref ArrayUtil<TValue>.Get2DCoordFrom1DArrayRowMajor(_storageAccess(), Scalar.As<TVectorKeyType, int>(coordinates.R), Scalar.As<TVectorKeyType, int>(coordinates.Q), _height);
             }
             default:
                 throw new InvalidConstraintException("FixedSizedStorage can only store Rectangle or Rhombus maps!");

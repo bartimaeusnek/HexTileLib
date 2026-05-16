@@ -154,7 +154,7 @@ public readonly struct CubeCoordinates<T> : IEquatable<AxialCoordinates<T>>, ICo
         return coordinates + Direction(direction);
     }
 
-    public static readonly List<CubeCoordinates<T>> diagonals = new List<CubeCoordinates<T>>
+    public static readonly CubeCoordinates<T>[] diagonals = new []
     {
         new CubeCoordinates<T>(Scalar<T>.Two, Scalar<T>.MinusOne, Scalar<T>.MinusOne),
         new CubeCoordinates<T>(Scalar<T>.One, Scalar<T>.MinusTwo, Scalar<T>.One),
@@ -205,7 +205,7 @@ public readonly struct CubeCoordinates<T> : IEquatable<AxialCoordinates<T>>, ICo
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<CubeCoordinates<T>> Rings(T range)
+    public IEnumerable<CubeCoordinates<T>> Rings(T range)
     {
         return RingsCalculation(range, this);
     }
@@ -217,9 +217,8 @@ public readonly struct CubeCoordinates<T> : IEquatable<AxialCoordinates<T>>, ICo
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static List<CubeCoordinates<T>> RingsCalculation(T range, CubeCoordinates<T> center)
+    public static IEnumerable<CubeCoordinates<T>> RingsCalculation(T range, CubeCoordinates<T> center)
     {
-        var results = new List<CubeCoordinates<T>>();
         var point = center.Neighbor((CoordinateDirectionFlat)4);
 
         for (var i = Scalar<T>.One; Scalar.LessThan(i, range); i = Scalar.Add(i, Scalar<T>.One))
@@ -230,11 +229,10 @@ public readonly struct CubeCoordinates<T> : IEquatable<AxialCoordinates<T>>, ICo
         {
             for (var j = Scalar<T>.Zero; Scalar.LessThan(j, range); j = Scalar.Add(j, Scalar<T>.One))
             {
-                results.Add(point);
+                yield return point;
                 point = point.Neighbor((CoordinateDirectionFlat)i);
             }
         }
-        return results;
     }
 
 #region C#Specific

@@ -25,7 +25,7 @@ public class TestCoordinates
     [TestMethod]
     public void TestConstructorSafeness()
     {
-        Assert.ThrowsException<ArgumentException>(() => new CubeCoordinates<int>(1, 0, 0));
+        Assert.Throws<ArgumentException>(() => new CubeCoordinates<int>(1, 0, 0));
     }
 
     [TestMethod]
@@ -178,8 +178,11 @@ public class TestCoordinates
         };
         var v1 = (CubeCoordinates<int>)new AxialCoordinates<int>(0, 0);
         var distance = v1.Rings(1);
-        for (int i = 0; i < distance.Count; i++)
-            Assert.AreEqual(range1[i], distance[i]);
+        int i = 0;
+        foreach (var cubeCoordinates in distance)
+        {
+            Assert.AreEqual(range1[i++], cubeCoordinates);
+        }
 
         var range2 = new List<CubeCoordinates<int>>
         {
@@ -197,8 +200,11 @@ public class TestCoordinates
             new CubeCoordinates<int>(-1, 2, -1)
         };
         var distance2 = v1.Rings(2);
-        for (int i = 0; i < distance2.Count; i++)
-            Assert.AreEqual(range2[i], distance2[i]);
+        i = 0;
+        foreach (var cubeCoordinates in distance2)
+        {
+            Assert.AreEqual(range2[i++], cubeCoordinates);
+        }
     }
 
 

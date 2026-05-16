@@ -2,24 +2,26 @@
 
     <PropertyGroup>
         <LangVersion>latestmajor</LangVersion>
-        <TargetFrameworks>net5.0;net6.0;net7.0;net8.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
+        <TargetFrameworks>net5.0;net6.0;net7.0;net8.0;net9.0;net10.0;netstandard2.0;netstandard2.1</TargetFrameworks>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>HexTileLib</Title>
         <Authors>bartimaeusnek</Authors>
         <Description>A simple library that contains some classes which help with creating HexTile Games. This is a KISS approach, since many libs out there seemed bloated to me.</Description>
-        <Copyright>2020 bartimaeusnek</Copyright>
+        <Copyright>2020 - 2026 bartimaeusnek</Copyright>
         <PackageProjectUrl>https://github.com/bartimaeusnek/HexTileLib</PackageProjectUrl>
         <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/bartimaeusnek/HexTileLib</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>hex, grid, hexgrid, Hexagonal Grids,lgplv3</PackageTags>
-        <Version>2.0.0</Version>
+        <Version>2.1.0</Version>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU;x64</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Silk.NET.Maths" Version="2.20.0"/>
+        <PackageReference Include="Silk.NET.Maths" Version="2.23.0" />
     </ItemGroup>
 
     <PropertyGroup Label="Package-SourceLink">
@@ -33,7 +35,7 @@
     </PropertyGroup>
 
     <ItemGroup Label="ItemGroup-SourceLink">
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
